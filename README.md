@@ -25,18 +25,20 @@ Le mode hors ligne exige une adresse **https**. Le plus simple :
 
 ## Utilisation
 
-- **＋** dans la barre du haut : ajouter un jour (date, titre, couleur).
-- **＋ Point** : rechercher un lieu (avec réseau), coller un lien Google Maps ou des coordonnées `35.71, 139.79`, toucher la carte, ou prendre « Ma position ».
+- **＋ Ajouter un jour** (en bas de l’Aperçu) : nouveau jour (date, titre, couleur).
+- **Panneau du bas** : le faire glisser (réduit / moitié / plein écran). Onglets **Aperçu** (tous les jours), **Programme** (un jour : toucher une date ou balayer le titre) et **Hôtels** (dates, adresse en japonais à copier pour un taxi). Pendant le voyage, le jour J s'ouvre tout seul.
+- **＋** (bouton noir, onglet Programme) : ajouter une étape au jour affiché.
+- **Restos** : restaurants classés par ville, sans lien avec les dates. Filtres par ville et « Sans poisson », bouton « Y aller » (ou recherche Google Maps s'il n'y a pas d'adresse précise), case « Testé ». **＋** pour en ajouter un, toucher une fiche pour la modifier.
+- **Toucher une étape** (liste ou carte) : fiche avec photo, note complète et « Y aller ». **✎ Modifier** depuis la fiche pour la changer, la déplacer ou la changer de jour.
+- Ajouter une étape : rechercher un lieu (avec réseau), coller un lien Google Maps ou des coordonnées `35.71, 139.79`, toucher la carte, ou prendre « Ma position ».
 - **Appui long sur la carte** : ajout rapide d'un point au jour affiché.
-- ▲ ▼ : changer l'ordre ; toucher un point : le modifier, le déplacer, le changer de jour.
-- 🚆 🚶 🚗 🚲 : mode de transport pour Google Maps.
-  - **Ouvrir le trajet dans Google Maps** envoie tout le parcours (découpé en plusieurs trajets s'il y a plus de 5 points, la limite de Google Maps sur mobile).
-  - En **transports**, Google Maps n'accepte pas d'étapes : utilisez les liens **Itinéraire ↗** entre deux points.
+- **⇅ Ordre** : affiche les boutons ▲ ▼ pour réordonner les étapes.
+- **Itinéraire ↗** entre deux points : ouvre le trajet en transports dans Google Maps.
 
 ## Avant de partir (avec du Wi-Fi)
 
 1. Saisir tous les points.
-2. Menu **⋯ → Télécharger la carte pour le hors-ligne** (sur « Tout » pour l'ensemble du voyage). La carte est téléchargée autour de chaque point.
+2. Menu **⋯ → Télécharger la carte pour le hors-ligne** (depuis l'Aperçu pour l'ensemble du voyage). La carte est téléchargée autour de chaque point.
 3. Menu **⋯ → Exporter une sauvegarde** : gardez le fichier `.json` (mail, Drive…). **Importer** permet de le recharger sur un autre téléphone.
 
 Hors ligne, tout fonctionne (carte téléchargée, points, GPS) sauf la recherche de lieux. Google Maps a besoin de réseau pour calculer l'itinéraire. Vous pouvez aussi télécharger les zones dans l'app Google Maps (« Cartes hors connexion »), mais les trajets en transports n'y sont pas disponibles.

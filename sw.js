@@ -1,5 +1,5 @@
 // Changer la version pour forcer la mise à jour de l'app sur les téléphones.
-const SHELL_CACHE = 'shell-v13';
+const SHELL_CACHE = 'shell-v30';
 const TILE_CACHE = 'tiles-v1'; // doit correspondre à app.js
 const PHOTO_CACHE = 'photos-v1'; // idem
 const TILE_HOSTS = ['tiles.openfreemap.org', 'server.arcgisonline.com', 'a.tile.openstreetmap.fr']; // fonds de carte de app.js
@@ -12,6 +12,8 @@ const SHELL = [
   'manifest.webmanifest',
   'vendor/maplibre/maplibre-gl.js',
   'vendor/maplibre/maplibre-gl.css',
+  'vendor/fonts/source-sans-3-latin.woff2',
+  'vendor/fonts/source-sans-3-latin-ext.woff2',
   'icons/icon.svg',
   'icons/icon-180.png',
   'icons/icon-192.png',

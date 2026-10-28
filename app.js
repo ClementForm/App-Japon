@@ -45,14 +45,47 @@ const fillTemplate = (u, z, x, y) => u.replace('{z}', z).replace('{x}', x).repla
 // en cache sans la version (même règle dans sw.js).
 const tileKey = (url) => url.replace(/(tiles\.openfreemap\.org\/planet\/)[^/]+\//, '$1_/');
 const COLORS = ['#e6194b', '#4363d8', '#3cb44b', '#f58231', '#911eb4', '#0097a7', '#f032e6', '#9a6324', '#469990', '#800000', '#808000', '#000075'];
-const MODES = [
-  ['transit', '🚆', 'Transports'],
-  ['walking', '🚶', 'À pied'],
-  ['driving', '🚗', 'Voiture'],
-  ['bicycling', '🚲', 'Vélo'],
-];
 
 const $ = (s) => document.querySelector(s);
+
+// Icônes au trait (grille 24 × 24, dans l'esprit de Lucide). Dans le HTML : data-icon="nom" (+ data-size).
+const ICONS = {
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  go: '<polygon points="3 11 22 2 13 21 11 13 3 11"/>',
+  train: '<rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M9 21l1.5-4M15 21l-1.5-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  up: '<path d="m18 15-6-6-6 6"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
+  pencil: '<path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  tap: '<path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11m0-1.5a1.5 1.5 0 0 1 3 0V11m0-.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1.5a6 6 0 0 1-4.6-2.2L4 15.5a1.6 1.6 0 0 1 2.5-2L9 16"/>',
+  pin: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  move: '<path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/>',
+  external: '<path d="M7 17 17 7M8 7h9v9"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+  share: '<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/>',
+  folder: '<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  reorder: '<path d="m21 16-4 4-4-4M17 20V4M3 8l4-4 4 4M7 4v16"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  // Onglets
+  map: '<path d="M14.1 5.9 9.9 3.8a2 2 0 0 0-1.8 0L3.6 6A1 1 0 0 0 3 7v12.4a.6.6 0 0 0 .9.5l4.2-2.1a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0L20.4 18a1 1 0 0 0 .6-.9V4.6a.6.6 0 0 0-.9-.5l-4.2 2.1a2 2 0 0 1-1.8 0Z"/><path d="M15 6v15M9 3.5v15"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2.5"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/>',
+  bed: '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>',
+  // Types de restaurants
+  utensils: '<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+  noodles: '<path d="M3 11h18a9 9 0 0 1-18 0Z"/><path d="M8 21h8M9 3l2.5 8M15.5 3 14 11"/>',
+  fish: '<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5M16 17.93a9.77 9.77 0 0 1 0-11.86M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/>',
+  meat: '<path d="M3 21 21 3"/><rect x="5.5" y="10.5" width="6" height="6" rx="1.6" transform="rotate(45 8.5 13.5)"/><rect x="10.5" y="5.5" width="6" height="6" rx="1.6" transform="rotate(45 13.5 8.5)"/>',
+  sweet: '<path d="m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11"/><path d="M17 7A5 5 0 0 0 7 7"/><path d="M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4"/>',
+  market: '<path d="M3 9l1.5-5h15L21 9M3 9h18v1.5a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0Z"/><path d="M5 13v8h14v-8M10 21v-5h4v5"/>',
+};
+const icon = (name, size = 20) =>
+  `<svg class="i" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+document.querySelectorAll('[data-icon]').forEach((el) => el.insertAdjacentHTML('afterbegin', icon(el.dataset.icon, +el.dataset.size || 20)));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -67,9 +100,17 @@ function setPref(key, value) {
 // Noms des hébergements de l'itinéraire de base : reconnus aussi dans les données
 // enregistrées avant l'existence de l'option « hébergement ».
 const DEFAULT_HOTELS = new Set((window.DEFAULT_TRIP?.days || []).flatMap((d) => d.points.filter((p) => p.hotel).map((p) => p.name)));
+// Photo de chaque lieu de base : complète les points enregistrés avant l'ajout des photos.
+const DEFAULT_PHOTOS = new Map((window.DEFAULT_TRIP?.days || []).flatMap((d) => d.points.filter((p) => p.photo).map((p) => [p.name, [p.photo, p.credit]])));
+// Ville de chaque hébergement de base : complète les données enregistrées avant l'ajout du champ.
+const DEFAULT_CITIES = new Map((window.DEFAULT_TRIP?.days || []).flatMap((d) => d.points.filter((p) => p.city).map((p) => [p.name, p.city])));
+// Position et photo de chaque resto de base : reprises d'après le nom pour les restos enregistrés avant leur ajout.
+const DEFAULT_RESTO_POS = new Map((window.DEFAULT_TRIP?.restaurants || []).filter((r) => r.lat != null).map((r) => [r.name, r]));
+const DEFAULT_RESTO_PHOTOS = new Map((window.DEFAULT_TRIP?.restaurants || []).filter((r) => r.photo).map((r) => [r.name, r]));
 let state = load();
-let currentDayId = pref('currentDay', null);
-let travelMode = pref('travelMode', 'transit');
+let currentDayId = pref('currentDay', null) || null;
+let lastDayId = currentDayId; // jour rouvert par l'onglet « Programme »
+let tab = currentDayId ? 'day' : ['hotels', 'restos'].includes(pref('tab', '')) ? pref('tab', '') : 'overview';
 let pending = null; // { type: 'add', dayId } | { type: 'move', pid }
 let editing = null; // { pid } ou { draft: { lat, lng } }
 let editingDayId = null;
@@ -81,6 +122,16 @@ function load() {
     if (raw) return normalize(JSON.parse(raw));
   } catch {}
   return normalize(window.DEFAULT_TRIP || { name: 'Voyage au Japon', days: [] });
+}
+
+// Lieu d'un restaurant : recherche Google Maps (query) et/ou position sur la carte (lat, lng, approx).
+function restoPlace(r) {
+  const out = {};
+  if (r.query) out.query = String(r.query);
+  const src = r.lat != null && r.lat !== '' ? r : DEFAULT_RESTO_POS.get(r.name);
+  if (src && Number.isFinite(+src.lat) && Number.isFinite(+src.lng)) Object.assign(out, { lat: +src.lat, lng: +src.lng, approx: !!src.approx });
+  if (!out.query && out.lat == null) out.query = String(r.name || '');
+  return out;
 }
 
 function normalize(data) {
@@ -102,9 +153,25 @@ function normalize(data) {
           time: String(p.time || ''),
           note: String(p.note || ''),
           hotel: p.hotel === undefined ? DEFAULT_HOTELS.has(p.name) : !!p.hotel,
-          photo: String(p.photo || ''),
-          credit: String(p.credit || ''),
+          photo: String(p.photo || DEFAULT_PHOTOS.get(p.name)?.[0] || ''),
+          credit: String(p.photo ? p.credit || '' : DEFAULT_PHOTOS.get(p.name)?.[1] || ''),
+          city: String(p.city || DEFAULT_CITIES.get(p.name) || ''),
         })),
+    })),
+    // Données d'avant la rubrique Restos : on part de la liste de base.
+    restaurants: (Array.isArray(data.restaurants) ? data.restaurants : window.DEFAULT_TRIP?.restaurants || []).map((r) => ({
+      id: String(r.id || uid()),
+      name: String(r.name || 'Restaurant'),
+      city: String(r.city || ''),
+      kind: String(r.kind || 'food'),
+      note: String(r.note || ''),
+      noFish: !!r.noFish,
+      done: !!r.done,
+      when: String(r.when || ''), // moment conseillé, indicatif : la rubrique reste sans lien avec les jours
+      // Photo du plat : reprise des restos de base d'après le nom si elle manque (données plus anciennes).
+      photo: String(r.photo || DEFAULT_RESTO_PHOTOS.get(r.name)?.photo || ''),
+      credit: String(r.photo ? r.credit || '' : DEFAULT_RESTO_PHOTOS.get(r.name)?.credit || ''),
+      ...restoPlace(r),
     })),
     base: +data.base || 0, // version de l'itinéraire de base dont ces données sont issues
   };
@@ -145,6 +212,14 @@ function fmtDate(iso) {
   return isNaN(d) ? '' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+const fmtParts = (iso, opts) => (iso ? new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', opts) : '');
+
+// Date du téléphone (heure locale : celle du Japon une fois sur place).
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function addDaysIso(iso, n) {
   const d = new Date(iso + 'T12:00:00');
   d.setDate(d.getDate() + n);
@@ -161,21 +236,11 @@ function distKm(a, b) {
 const fmtDist = (km) => (km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(km < 10 ? 1 : 0)} km`);
 const ll = (p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`;
 
-// Sans origine, Google Maps part de la position actuelle.
-function dirUrl(pts, mode) {
-  const q = new URLSearchParams({ api: '1', destination: ll(pts[pts.length - 1]), travelmode: mode });
+// Itinéraire en transports. Sans origine, Google Maps part de la position actuelle.
+function dirUrl(pts) {
+  const q = new URLSearchParams({ api: '1', destination: ll(pts[pts.length - 1]), travelmode: 'transit' });
   if (pts.length > 1) q.set('origin', ll(pts[0]));
-  const mid = pts.slice(1, -1);
-  if (mid.length) q.set('waypoints', mid.map(ll).join('|'));
   return 'https://www.google.com/maps/dir/?' + q;
-}
-
-// Google Maps sur mobile accepte au plus 3 étapes intermédiaires, et aucune en transports.
-function routeChunks(points, mode) {
-  const max = mode === 'transit' ? 2 : 5;
-  const chunks = [];
-  for (let i = 0; i < points.length - 1; i += max - 1) chunks.push(points.slice(i, i + max));
-  return chunks;
 }
 
 // Reconnaît « 35.0, 135.7 » et les liens Google Maps longs.
@@ -219,8 +284,11 @@ const map = new maplibregl.Map({
   // Kanji et kana dessinés avec la police du téléphone : rien à télécharger.
   localIdeographFontFamily: '"Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif',
 });
-map.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch: true }), 'top-right');
-map.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-right');
+// À gauche : la colonne de droite est prise par les boutons ronds de l'app.
+map.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch: true }), 'top-left');
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-left');
+// Crédits repliés en « ⓘ » : dépliés, ils masquent le haut de la carte sur téléphone.
+map.on('load', () => $('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show'));
 
 function setBasemap(key) {
   basemap = key;
@@ -268,8 +336,27 @@ let markers = [];
 function renderMap() {
   markers.forEach((m) => m.remove());
   markers = [];
+  // Onglet Restos : les restaurants au premier plan, l'itinéraire en filigrane.
+  if (tab === 'restos') {
+    for (const r of visibleRestos().filter(hasPlace)) {
+      const el = document.createElement('div');
+      el.className = `num-marker resto-marker${r.approx ? ' approx' : ''}${r.done ? ' done' : ''}`;
+      el.style.zIndex = 2;
+      el.title = r.approx ? `${r.name} (position approximative)` : r.name;
+      el.innerHTML = `<span>${icon(r.kind in KIND_ICONS ? KIND_ICONS[r.kind] : 'utensils', 16)}</span><b class="pt-label">${esc(r.name)}${r.approx ? ' ~' : ''}</b>`;
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (snap === 'peek') setSnap('half'); // la fiche doit être visible
+        const card = $(`#sheet-body [data-rid="${CSS.escape(r.id)}"]`);
+        card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card?.classList.add('flash');
+        setTimeout(() => card?.classList.remove('flash'), 1200);
+      });
+      markers.push(new maplibregl.Marker({ element: el }).setLngLat([r.lng, r.lat]).addTo(map));
+    }
+  }
   for (const day of state.days) {
-    const active = !currentDayId || currentDayId === day.id;
+    const active = tab !== 'restos' && (!currentDayId || currentDayId === day.id);
     const labels = pointLabels(day.points);
     day.points.forEach((p, j) => {
       const el = document.createElement('div');
@@ -280,8 +367,9 @@ function renderMap() {
       el.addEventListener('click', (e) => {
         if (pending) return; // laisse la carte recevoir le clic
         e.stopPropagation();
-        if (currentDayId === day.id) openPointDialog(p.id);
-        else selectDay(day.id);
+        // Depuis n'importe quel onglet : on bascule sur le jour du point et on ouvre sa fiche (avec photo).
+        if (tab !== 'day' || currentDayId !== day.id) selectDay(day.id);
+        openView(p.id);
       });
       markers.push(new maplibregl.Marker({ element: el, opacity: active ? '1' : '0.12' }).setLngLat([p.lng, p.lat]).addTo(map));
     });
@@ -289,17 +377,22 @@ function renderMap() {
 }
 
 function sheetPadding() {
-  const r = $('#sheet').getBoundingClientRect();
-  const wide = window.innerWidth >= 800;
-  return wide
-    ? { top: 80, left: r.right + 30, bottom: 40, right: 40 }
-    : { top: 80, left: 30, bottom: r.height + 20, right: 30 };
+  // Hauteur visée plutôt que mesurée : le panneau peut être en pleine animation.
+  if (isWide()) return { top: 90, left: $('#sheet').getBoundingClientRect().right + 30, bottom: 40, right: 40 };
+  const h = snapHeights()[snap === 'full' ? 'half' : snap];
+  return { top: mapTop() + 10, left: 40, bottom: h + 20, right: 80 }; // à droite : la colonne de boutons
+}
+
+// Bas de la première rangée de boutons ronds (zone d'encoche comprise).
+function mapTop() {
+  return parseFloat(getComputedStyle($('#topbar')).paddingTop) + 62;
 }
 
 // Un jour : vue inclinée pour voir les bâtiments en relief. Tout le voyage : vue à plat.
 function fitView(animate = true) {
   const days = currentDayId ? [getDay(currentDayId)] : state.days;
-  const pts = days.flatMap((d) => d.points);
+  const restos = tab === 'restos' ? visibleRestos().filter(hasPlace) : [];
+  const pts = restos.length ? restos : days.flatMap((d) => d.points);
   if (!pts.length) return;
   const bounds = new maplibregl.LngLatBounds();
   pts.forEach((p) => bounds.extend([p.lng, p.lat]));
@@ -346,14 +439,18 @@ map.on('touchmove', (e) => {
 map.on('touchend', () => clearTimeout(press?.timer));
 map.on('touchcancel', () => clearTimeout(press?.timer));
 
+// Pendant qu'on touche la carte, le panneau est réduit puis retrouve sa hauteur.
+let snapBeforePending = null;
 function setPending(p, text) {
   pending = p;
   $('#map').classList.toggle('picking', !!p);
   if (p) {
-    $('#sheet').classList.add('collapsed');
+    snapBeforePending ??= snap;
+    setSnap('peek');
     showBanner(text, 'Annuler', () => setPending(null));
   } else {
-    $('#sheet').classList.remove('collapsed');
+    if (snapBeforePending) setSnap(snapBeforePending);
+    snapBeforePending = null;
     hideBanner();
   }
 }
@@ -375,118 +472,379 @@ $('#banner-btn').addEventListener('click', () => bannerAction?.());
 
 // ============ Rendu ============
 function render() {
-  renderChips();
+  renderTabs();
   renderSheet();
   renderMap();
 }
 
-function renderChips() {
-  const chips = [`<button class="chip ${currentDayId ? '' : 'active'}" data-day="">Tout</button>`];
-  for (const d of state.days) {
-    const on = d.id === currentDayId;
-    chips.push(`<button class="chip ${on ? 'active' : ''}" style="--c:${esc(d.color)};border-color:${esc(d.color)}" data-day="${esc(d.id)}">J${dayIndex(d) + 1}</button>`);
-  }
-  chips.push('<button class="chip" data-act="add-day" aria-label="Ajouter un jour">＋</button>');
-  $('#chips').innerHTML = chips.join('');
-  $('#chips .active')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+// Onglets du panneau. « Programme » affiche un jour (currentDayId) ; les autres, tout le voyage.
+function renderTabs() {
+  document.querySelectorAll('#tabs [data-tab]').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+  $('#btn-back').hidden = tab === 'overview';
+  $('#fab-add').hidden = tab !== 'day' && tab !== 'restos';
 }
 
 function renderSheet() {
-  const day = currentDayId && getDay(currentDayId);
-  $('#sheet-body').innerHTML = day ? dayHtml(day) : overviewHtml();
+  const day = tab === 'day' && getDay(currentDayId);
+  $('#sheet-body').innerHTML = day ? dayHtml(day)
+    : tab === 'hotels' ? hotelsHtml()
+    : tab === 'restos' ? restosHtml()
+    : overviewHtml();
+  $('#sheet-body .day-pills .on, #sheet-body .filters .on')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  applySnap();
+}
+
+// ============ Restaurants (sans lien avec les jours) ============
+const KIND_ICONS = { noodles: 'noodles', sushi: 'fish', meat: 'meat', sweet: 'sweet', market: 'market', food: 'utensils' };
+const KIND_LABELS = { noodles: 'Nouilles', sushi: 'Poisson / sushi', meat: 'Viande / grill', sweet: 'Sucré / café', market: 'Marché', food: 'Cuisine' };
+let restoCity = pref('restoCity', '');
+let restoNoFish = pref('restoNoFish', '') === '1';
+let restoDone = ['todo', 'done'].includes(pref('restoDone', '')) ? pref('restoDone', '') : ''; // '' = tous
+
+const hasPlace = (r) => Number.isFinite(r.lat);
+const searchUrl = (q) => 'https://www.google.com/maps/search/?' + new URLSearchParams({ api: '1', query: q });
+// Villes dans l'ordre du voyage (ordre d'apparition dans la liste).
+const restoCities = () => [...new Set(state.restaurants.map((r) => r.city).filter(Boolean))];
+const visibleRestos = () => state.restaurants.filter((r) => (!restoCity || r.city === restoCity) && (!restoNoFish || r.noFish)
+  && (!restoDone || r.done === (restoDone === 'done')));
+
+function restoCard(r) {
+  // Avec un nom à chercher, Google Maps trouve le bon resto mieux qu'une position (parfois approximative).
+  const go = r.query
+    ? `<a class="btn primary" href="${esc(searchUrl(r.query))}" target="_blank" rel="noopener">${icon('search', 18)}Chercher sur Maps</a>`
+    : `<a class="btn primary" href="${esc(dirUrl([r]))}" target="_blank" rel="noopener">${icon('go', 18)}Y aller</a>`;
+  return `
+    <article class="card resto ${r.done ? 'done' : ''} ${r.photo ? 'has-photo' : ''}" data-rid="${esc(r.id)}">
+      ${r.photo ? `<figure class="dish" data-act="edit-resto"><img src="${esc(r.photo)}" alt="" loading="lazy">${r.credit ? `<figcaption>Photo : ${esc(r.credit)}</figcaption>` : ''}${r.done ? `<span class="done-badge">${icon('check', 14)}Testé</span>` : ''}</figure>` : ''}
+      <div class="card-top" data-act="edit-resto">
+        <span class="ico">${icon(KIND_ICONS[r.kind] || 'utensils', 24)}</span>
+        <div class="grow">
+          <b class="card-title">${esc(r.name)}</b>
+          <small>${esc(KIND_LABELS[r.kind] || 'Cuisine')}${r.city ? ' · ' + esc(r.city) : ''}</small>
+          ${r.when ? `<small class="when">${icon('calendar', 14)}${esc(r.when)}</small>` : ''}
+          ${r.noFish ? `<span class="tag soft">${icon('check', 12)}Sans poisson OK</span>` : ''}
+        </div>
+      </div>
+      ${r.note ? `<p class="resto-note">${esc(r.note)}</p>` : ''}
+      <div class="resto-actions">
+        ${go}
+        <button class="${r.done ? 'on' : ''}" data-act="toggle-done" aria-pressed="${r.done}">${icon('check', 18)}${r.done ? 'Testé' : 'À tester'}</button>
+      </div>
+    </article>`;
+}
+
+function restosHtml() {
+  if (restoCity && !restoCities().includes(restoCity)) restoCity = '';
+  const list = visibleRestos();
+  const filters = ['', ...restoCities()].map((c) => `<button class="filter ${c === restoCity ? 'on' : ''}" data-act="resto-city" data-city="${esc(c)}">${esc(c || 'Toutes')}</button>`).join('');
+  // Toutes les villes : regroupées sous un intertitre.
+  const groups = restoCity ? [[restoCity, list]] : restoCities().map((c) => [c, list.filter((r) => r.city === c)]).filter(([, rs]) => rs.length);
+  const others = restoCity ? [] : list.filter((r) => !r.city);
+  const body = groups.map(([c, rs]) => `${restoCity ? '' : `<h3 class="group">${esc(c)}</h3>`}${rs.map(restoCard).join('')}`).join('') + others.map(restoCard).join('');
+  const done = state.restaurants.filter((r) => r.done).length;
+  return `
+    <div class="sheet-head">
+      <div class="grow"><small class="eyebrow">${done} testé${done > 1 ? 's' : ''} sur ${state.restaurants.length}</small><h1>Restaurants</h1></div>
+      <button class="filter fish ${restoNoFish ? 'on' : ''}" data-act="resto-nofish">${icon('fish', 16)}Sans poisson</button>
+    </div>
+    <div class="segmented">${[['', 'Tous', state.restaurants.length], ['todo', 'À tester', state.restaurants.length - done], ['done', 'Testés', done]]
+      .map(([v, label, n]) => `<button class="${v === restoDone ? 'on' : ''}" data-act="resto-done" data-done="${v}">${label}<small>${n}</small></button>`).join('')}</div>
+    <div class="filters">${filters}</div>
+    ${body || '<p class="empty">Aucun restaurant pour ce filtre.</p>'}
+    <button class="wide" data-act="add-resto">${icon('plus')}Ajouter un restaurant</button>`;
+}
+
+// Un hébergement par séjour : les nuits consécutives au même hôtel sont regroupées.
+function stays() {
+  const out = [];
+  for (const day of state.days) {
+    for (const p of day.points.filter((q) => q.hotel)) {
+      const last = out[out.length - 1];
+      if (last && last.name === p.name) {
+        last.to = day.date || last.to;
+        if (p.note.length < last.point.note.length) last.point = p; // la note sans ajout du jour
+      } else {
+        out.push({ name: p.name, city: p.city, from: day.date, to: day.date, color: day.color, point: p });
+      }
+    }
+  }
+  return out;
+}
+
+const JP = /[぀-ヿ一-鿿]/;
+
+function hotelsHtml() {
+  const fmt = (iso) => fmtParts(iso, { weekday: 'short', day: 'numeric', month: 'short' });
+  const cards = stays().map((s) => {
+    const lines = s.point.note.split('\n').filter(Boolean);
+    const jp = lines.find((l) => JP.test(l));
+    const addr = jp ? lines[lines.indexOf(jp) - 1] : '';
+    const infos = lines.filter((l) => l !== jp && l !== addr);
+    return `
+    <article class="card" data-pid="${esc(s.point.id)}">
+      <div class="card-top" data-act="view-point">
+        <span class="ico" style="--c:${esc(s.color)}">${BED_SVG}</span>
+        <div class="grow">
+          ${s.city ? `<span class="city" style="color:${esc(s.color)}">${icon('pin', 14)}${esc(s.city)}</span>` : ''}
+          <b class="card-title">${esc(s.name)}</b>
+          ${addr ? `<small>${esc(addr)}</small>` : ''}
+          ${s.from ? `<small>${esc(fmt(s.from))}${s.to !== s.from ? ' — ' + esc(fmt(s.to)) : ''}</small>` : ''}
+        </div>
+      </div>
+      ${infos.length ? `<div class="label">Infos</div><div class="card-note">${infos.map((l) => `<p>${esc(l)}</p>`).join('')}</div>` : ''}
+      ${jp ? `<div class="label">Adresse en japonais</div><button class="copy-box" data-act="copy" data-text="${esc(jp)}"><span>${esc(jp)}</span>${COPY_SVG}</button>` : ''}
+      <a class="btn primary wide" href="${esc(dirUrl([s.point]))}" target="_blank" rel="noopener">${icon('go')}Y aller</a>
+    </article>`;
+  }).join('');
+  return `
+    <div class="sheet-head">
+      <div class="grow"><h1>Hôtels et hébergements</h1></div>
+      <span class="pill">${stays().length}</span>
+    </div>
+    ${cards || '<p class="empty">Aucun hébergement.<br>Cochez « Hébergement » sur un point pour l’ajouter ici.</p>'}`;
+}
+
+const COPY_SVG = icon('copy', 18);
+
+function toast(text) {
+  showBanner(text, '', null);
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(hideBanner, 1800);
+}
+
+// « Départ dans 3 jours », « Jour 5 sur 15 »… d'après les dates des jours.
+function tripStatus() {
+  const dates = state.days.map((d) => d.date).filter(Boolean).sort();
+  if (!dates.length) return null;
+  const t = todayIso();
+  const first = dates[0], last = dates[dates.length - 1];
+  const range = `${fmtParts(first, { day: 'numeric', month: 'short' })} → ${fmtParts(last, { day: 'numeric', month: 'short' })}`;
+  if (t < first) {
+    const n = Math.round((new Date(first + 'T12:00') - new Date(t + 'T12:00')) / 864e5);
+    return { range, text: n === 1 ? 'Départ demain' : `Départ dans ${n} jours` };
+  }
+  if (t <= last) return { range, text: `Jour ${dates.filter((d) => d <= t).length} sur ${dates.length}`, now: true };
+  return { range, text: 'Terminé' };
 }
 
 function overviewHtml() {
-  const total = state.days.reduce((n, d) => n + d.points.length, 0);
-  const items = state.days.map((d) => `
-    <li class="item" data-day="${esc(d.id)}">
-      <span class="dot" style="background:${esc(d.color)}"></span>
-      <div class="info"><b>${esc(dayLabel(d))}</b><small>${esc(fmtDate(d.date))}${d.date ? ' · ' : ''}${d.points.length} point${d.points.length > 1 ? 's' : ''}</small></div>
-      <span class="muted">›</span>
-    </li>`).join('');
+  const today = todayIso();
+  const status = tripStatus();
+  const items = state.days.map((d) => {
+    const visits = d.points.filter((p) => !p.hotel).length;
+    const cls = d.date && d.date < today ? 'past' : '';
+    return `
+    <li class="day-row ${cls}" data-day="${esc(d.id)}">
+      <div class="date-tile" style="--c:${esc(d.color)}">
+        <small>${esc(fmtParts(d.date, { weekday: 'short' }))}</small><b>${esc(fmtParts(d.date, { day: 'numeric' }) || 'J' + (dayIndex(d) + 1))}</b><small>${esc(fmtParts(d.date, { month: 'short' }))}</small>
+      </div>
+      <div class="info"><b>${esc(d.title || 'Jour ' + (dayIndex(d) + 1))}</b><small>J${dayIndex(d) + 1} · ${visits} étape${visits > 1 ? 's' : ''}</small></div>
+      ${d.date === today ? '<span class="tag">Aujourd’hui</span>' : ''}
+      <span class="chev">${icon('right')}</span>
+    </li>`;
+  }).join('');
   return `
     <div class="sheet-head">
-      <div class="grow"><h1>${esc(state.name)}</h1><small>${state.days.length} jour${state.days.length > 1 ? 's' : ''} · ${total} point${total > 1 ? 's' : ''}</small></div>
+      <div class="grow">${status ? `<small class="eyebrow">${esc(status.range)}</small>` : ''}<h1>${esc(state.name)}</h1></div>
+      ${status ? `<span class="pill ${status.now ? 'accent' : ''}">${esc(status.text)}</span>` : ''}
     </div>
-    <div class="more">
-      ${items ? `<ul class="list">${items}</ul>` : '<p class="empty">Aucun jour pour l’instant.<br>Créez votre premier jour de voyage.</p>'}
-      <button class="primary wide" data-act="add-day">＋ Ajouter un jour</button>
-    </div>`;
+    ${items ? `<ul class="list">${items}</ul>` : '<p class="empty">Aucun jour pour l’instant.<br>Créez votre premier jour de voyage.</p>'}
+    <button class="wide" data-act="add-day">${icon('plus')}Ajouter un jour</button>`;
 }
+
+let reordering = false; // boutons ▲ ▼ affichés
 
 function dayHtml(day) {
   const pts = day.points;
-  const modes = MODES.map(([k, icon, label]) =>
-    `<button class="${k === travelMode ? 'on' : ''}" data-act="mode" data-mode="${k}" title="${label}" aria-label="${label}">${icon}</button>`).join('');
-
-  let routes = '';
-  if (pts.length === 1) {
-    routes = `<a class="btn" href="${esc(dirUrl(pts, travelMode))}" target="_blank" rel="noopener">🗺️ Y aller depuis ma position</a>`;
-  } else if (pts.length > 1) {
-    const chunks = routeChunks(pts, travelMode);
-    if (travelMode === 'transit' && chunks.length > 1) {
-      routes = '<p class="muted">En transports, Google Maps n’accepte pas d’étapes : ouvrez chaque trajet avec « Itinéraire ↗ » ci-dessous.</p>';
-    } else {
-      routes = chunks.map((c, k) => {
-        const label = chunks.length > 1 ? `Trajet ${k + 1} : ${c[0].name} → ${c[c.length - 1].name}` : 'Ouvrir le trajet dans Google Maps';
-        return `<a class="btn" href="${esc(dirUrl(c, travelMode))}" target="_blank" rel="noopener">🗺️ ${esc(label)}</a>`;
-      }).join('');
-    }
-  }
-
+  const i = dayIndex(day);
   const rows = [];
   const labels = pointLabels(pts);
   pts.forEach((p, j) => {
     if (j > 0) {
       const prev = pts[j - 1];
-      rows.push(`<li class="leg">↓ ${fmtDist(distKm(prev, p))} · <a href="${esc(dirUrl([prev, p], travelMode))}" target="_blank" rel="noopener">Itinéraire ↗</a></li>`);
+      rows.push(`<li class="leg"><a href="${esc(dirUrl([prev, p]))}" target="_blank" rel="noopener">${fmtDist(distKm(prev, p))} · <b>Itinéraire${icon('external', 14)}</b></a></li>`);
     }
-    const sub = [p.time, p.note.split('\n')[0]].filter(Boolean).join(' · ');
+    const sub = p.note.split('\n')[0];
     rows.push(`
-      <li class="item" data-pid="${esc(p.id)}">
+      <li class="stop ${p.hotel ? 'hotel' : ''}" data-pid="${esc(p.id)}">
         <span class="badge" style="background:${esc(day.color)}">${labels[j]}</span>
-        ${p.photo ? `<img class="thumb" src="${esc(p.photo)}" alt="" loading="lazy" data-act="edit-point">` : ''}
-        <div class="info" data-act="edit-point"><b>${esc(p.name)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>
-        <button class="icon-btn" data-act="up" aria-label="Monter" ${j === 0 ? 'disabled' : ''}>▲</button>
-        <button class="icon-btn" data-act="down" aria-label="Descendre" ${j === pts.length - 1 ? 'disabled' : ''}>▼</button>
+        <div class="stop-main" data-act="view-point">
+          <div class="stop-text">
+            ${p.time ? `<span class="time">${esc(p.time.replace(':', ' h '))}</span>` : ''}
+            <b>${esc(p.name)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}
+          </div>
+          ${p.photo ? `<img class="thumb" src="${esc(p.photo)}" alt="" loading="lazy">` : ''}
+        </div>
+        ${reordering ? `<div class="reorder">
+          <button class="icon-btn" data-act="up" aria-label="Monter" ${j === 0 ? 'disabled' : ''}>${icon('up', 18)}</button>
+          <button class="icon-btn" data-act="down" aria-label="Descendre" ${j === pts.length - 1 ? 'disabled' : ''}>${icon('down', 18)}</button>
+        </div>` : ''}
       </li>`);
   });
 
+  const today = todayIso();
+  const pills = state.days.map((d) => `
+    <button class="day-pill ${d.id === day.id ? 'on' : ''} ${d.date === today ? 'today' : ''}" style="--c:${esc(d.color)}" data-day="${esc(d.id)}">
+      <small>${esc(fmtParts(d.date, { weekday: 'short' }) || 'J' + (dayIndex(d) + 1))}</small><b>${esc(fmtParts(d.date, { day: 'numeric' }) || dayIndex(d) + 1)}</b>
+    </button>`).join('');
   return `
+    <div class="day-pills">${pills}</div>
     <div class="sheet-head">
-      <span class="dot" style="background:${esc(day.color)}"></span>
-      <div class="grow"><h1>${esc(dayLabel(day))}</h1><small>${esc(fmtDate(day.date))}${day.date ? ' · ' : ''}${pts.length} point${pts.length > 1 ? 's' : ''}</small></div>
-      <button class="icon-btn" data-act="edit-day" aria-label="Modifier le jour">✎</button>
+      <div class="grow">
+        <small class="eyebrow" style="color:${esc(day.color)}">Jour ${i + 1}${day.date ? ' · ' + esc(fmtDate(day.date)) : ''}${day.date === today ? ' · Aujourd’hui' : ''}</small>
+        <h1>${esc(day.title || 'Jour ' + (i + 1))}</h1>
+      </div>
+      <button class="icon-btn mini ${reordering ? 'on' : ''}" data-act="reorder" aria-label="${reordering ? 'Terminer' : 'Changer l’ordre'}">${icon(reordering ? 'check' : 'reorder', 18)}</button>
+      <button class="icon-btn mini" data-act="edit-day" aria-label="Modifier le jour">${icon('pencil', 17)}</button>
     </div>
-    <div class="actions">
-      <button class="primary" data-act="add-point">＋ Point</button>
-      <div class="modes">${modes}</div>
-    </div>
-    <div class="more">
-      <div class="routes">${routes}</div>
-      ${rows.length ? `<ol class="list">${rows.join('')}</ol>` : '<p class="empty">Ajoutez des points avec « ＋ Point »<br>ou par un appui long sur la carte.</p>'}
-    </div>`;
+    ${rows.length ? `<ol class="list timeline" style="--c:${esc(day.color)}">${rows.join('')}</ol>` : '<p class="empty">Ajoutez des étapes avec le bouton +<br>ou par un appui long sur la carte.</p>'}`;
 }
 
-function selectDay(id) {
+// Sans jour : onglet « Aperçu » (ou celui demandé), carte de tout le voyage.
+function selectDay(id, toTab) {
+  if ((id || null) !== currentDayId) reordering = false;
   currentDayId = id || null;
+  if (currentDayId) lastDayId = currentDayId;
+  tab = currentDayId ? 'day' : toTab || 'overview';
   setPref('currentDay', currentDayId || '');
+  setPref('tab', tab);
   render();
+  $('#sheet-body').scrollTop = 0;
   fitView();
 }
 
-// ============ Interactions du panneau ============
-$('#chips').addEventListener('click', (e) => {
-  const b = e.target.closest('button');
-  if (!b) return;
-  if (b.dataset.act === 'add-day') openDayDialog(null);
-  else selectDay(b.dataset.day);
-});
+function setTab(t) {
+  if (t !== 'day') return selectDay(null, t);
+  const today = state.days.find((d) => d.date === todayIso());
+  selectDay((getDay(lastDayId) || today || state.days[0])?.id, 'overview');
+}
 
-$('#sheet-handle').addEventListener('click', () => $('#sheet').classList.toggle('collapsed'));
+function stepDay(delta) {
+  const i = dayIndex(getDay(currentDayId)) + delta;
+  if (state.days[i]) selectDay(state.days[i].id);
+}
+
+// ============ Panneau : glisser entre 3 hauteurs ============
+const SNAPS = ['peek', 'half', 'full'];
+let snap = SNAPS.includes(pref('sheetSnap', '')) ? pref('sheetSnap', '') : 'half';
+const isWide = () => window.innerWidth >= 800;
+
+function snapHeights() {
+  const sheet = $('#sheet');
+  const head = $('#sheet-body .sheet-head');
+  const pad = parseFloat(getComputedStyle(sheet).paddingBottom) || 0;
+  const peek = head ? head.offsetTop + head.offsetHeight + pad + 4 : 100;
+  const full = window.innerHeight - mapTop() + 8;
+  return { peek, half: Math.max(peek, Math.min(full, Math.round(window.innerHeight * 0.5))), full };
+}
+
+function applySnap() {
+  $('#sheet').style.height = isWide() ? '' : snapHeights()[snap] + 'px';
+  if (snap === 'peek') $('#sheet-body').scrollTop = 0; // l'en-tête doit rester visible
+}
+
+function setSnap(s) {
+  snap = s;
+  if (!pending) setPref('sheetSnap', s);
+  applySnap();
+}
+
+window.addEventListener('resize', applySnap);
+
+let drag = null;
+let justDragged = false;
+$('#sheet').addEventListener('pointerdown', (e) => {
+  if (isWide() || !e.target.closest('#sheet-handle, #tabs, .sheet-head')) return;
+  drag = { x: e.clientX, y: e.clientY, h: $('#sheet').offsetHeight, t: e.timeStamp, axis: null, head: !!e.target.closest('.sheet-head') };
+});
+window.addEventListener('pointermove', (e) => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.axis) {
+    if (Math.hypot(dx, dy) < 8) return;
+    drag.axis = Math.abs(dy) >= Math.abs(dx) ? 'y' : 'x';
+    if (drag.axis === 'y') $('#sheet').classList.add('dragging');
+  }
+  if (drag.axis === 'y') {
+    const { peek, full } = snapHeights();
+    $('#sheet').style.height = Math.min(full, Math.max(peek * 0.85, drag.h - dy)) + 'px';
+  }
+});
+function endDrag(e) {
+  if (!drag) return;
+  const d = drag;
+  drag = null;
+  $('#sheet').classList.remove('dragging');
+  if (!d.axis) return; // simple toucher : géré par « click »
+  justDragged = true;
+  setTimeout(() => { justDragged = false; }, 0);
+  const dx = e.clientX - d.x, dy = e.clientY - d.y;
+  if (d.axis === 'x') {
+    // Balayage horizontal sur l'en-tête : jour précédent / suivant.
+    if (d.head && tab === 'day' && Math.abs(dx) > 50) stepDay(dx < 0 ? 1 : -1);
+    return;
+  }
+  const v = dy / Math.max(1, e.timeStamp - d.t); // px/ms, positif vers le bas
+  const hs = snapHeights();
+  const h = $('#sheet').offsetHeight;
+  let i = SNAPS.indexOf(snap);
+  if (v > 0.5) i = Math.max(0, i - 1);
+  else if (v < -0.5) i = Math.min(2, i + 1);
+  else i = SNAPS.reduce((best, s, k) => (Math.abs(hs[s] - h) < Math.abs(hs[SNAPS[best]] - h) ? k : best), 0);
+  setSnap(SNAPS[i]);
+}
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+// Après un glissement, le « click » qui suit ne doit rien déclencher.
+$('#sheet').addEventListener('click', (e) => {
+  if (justDragged) { e.stopPropagation(); e.preventDefault(); }
+}, true);
+
+// ============ Interactions du panneau ============
+$('#tabs').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]');
+  if (!b) return;
+  if (snap === 'peek') setSnap('half');
+  setTab(b.dataset.tab);
+});
+$('#btn-back').addEventListener('click', () => setTab('overview'));
+$('#btn-hotels').addEventListener('click', () => {
+  if (snap === 'peek') setSnap('half');
+  setTab('hotels');
+});
+$('#fab-add').addEventListener('click', () => (tab === 'restos' ? openRestoDialog(null) : openAddDialog()));
+
+$('#sheet-handle').addEventListener('click', () => setSnap(snap === 'half' ? 'full' : 'half'));
+
+// Rangées de dates et de filtres : au doigt, défilement natif ; à la souris, on les fait glisser à la main.
+let rowDrag = null;
+$('#sheet-body').addEventListener('pointerdown', (e) => {
+  const row = e.pointerType === 'mouse' && e.target.closest('.day-pills, .filters');
+  if (row) rowDrag = { row, x: e.clientX, left: row.scrollLeft, moved: false };
+});
+window.addEventListener('pointermove', (e) => {
+  if (!rowDrag) return;
+  const dx = e.clientX - rowDrag.x;
+  if (!rowDrag.moved && Math.abs(dx) < 5) return;
+  rowDrag.moved = true;
+  rowDrag.row.classList.add('grabbing');
+  rowDrag.row.scrollLeft = rowDrag.left - dx;
+});
+window.addEventListener('pointerup', () => {
+  if (!rowDrag) return;
+  rowDrag.row.classList.remove('grabbing');
+  // Un glissement ne doit pas sélectionner la date sous la souris.
+  if (rowDrag.moved) {
+    justDragged = true;
+    setTimeout(() => { justDragged = false; }, 0);
+  }
+  rowDrag = null;
+});
 
 $('#sheet-body').addEventListener('click', (e) => {
   const el = e.target.closest('[data-act], [data-day]');
+  // Toucher l'en-tête d'un panneau réduit : le déplier.
+  if (!el?.matches('button') && snap === 'peek' && e.target.closest('.sheet-head')) return setSnap('half');
   if (!el) return;
   const act = el.dataset.act;
   const pid = el.closest('[data-pid]')?.dataset.pid;
@@ -495,10 +853,30 @@ $('#sheet-body').addEventListener('click', (e) => {
   if (act === 'add-day') return openDayDialog(null);
   if (act === 'edit-day') return openDayDialog(currentDayId);
   if (act === 'add-point') return openAddDialog();
-  if (act === 'edit-point') return openPointDialog(pid);
-  if (act === 'mode') {
-    travelMode = el.dataset.mode;
-    setPref('travelMode', travelMode);
+  if (act === 'view-point') return openView(pid);
+  if (act === 'resto-city' || act === 'resto-nofish' || act === 'resto-done') {
+    if (act === 'resto-city') setPref('restoCity', (restoCity = el.dataset.city));
+    else if (act === 'resto-done') setPref('restoDone', (restoDone = el.dataset.done));
+    else setPref('restoNoFish', (restoNoFish = !restoNoFish) ? '1' : '');
+    renderSheet();
+    renderMap();
+    return fitView();
+  }
+  if (act === 'toggle-done') {
+    const r = state.restaurants.find((x) => x.id === el.closest('[data-rid]').dataset.rid);
+    r.done = !r.done;
+    save();
+    renderSheet();
+    return renderMap(); // avec un filtre Testés / À tester, le resto peut quitter la liste
+  }
+  if (act === 'edit-resto') return openRestoDialog(el.closest('[data-rid]').dataset.rid);
+  if (act === 'add-resto') return openRestoDialog(null);
+  if (act === 'copy') {
+    navigator.clipboard?.writeText(el.dataset.text).then(() => toast('Adresse copiée'), () => toast('Copie impossible'));
+    return;
+  }
+  if (act === 'reorder') {
+    reordering = !reordering;
     return renderSheet();
   }
   if (act === 'up' || act === 'down') {
@@ -516,6 +894,53 @@ $('#sheet-body').addEventListener('click', (e) => {
 document.querySelectorAll('dialog [data-close]').forEach((b) => b.addEventListener('click', () => b.closest('dialog').close()));
 // Fermer en touchant le fond.
 document.querySelectorAll('dialog').forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+
+// --- Fiche d'un point (lecture) ---
+let viewing = null; // id du point affiché
+function openView(pid) {
+  const f = findPoint(pid);
+  if (!f) return;
+  const { day, point: p } = f;
+  const i = day.points.indexOf(p);
+  const prev = day.points[i - 1], next = day.points[i + 1];
+  viewing = pid;
+  const badge = $('#view-badge');
+  badge.innerHTML = pointLabels(day.points)[i];
+  badge.style.background = day.color;
+  $('#view-meta').textContent = [p.time && p.time.replace(':', ' h '), `J${dayIndex(day) + 1}`, fmtDate(day.date)].filter(Boolean).join(' · ');
+  $('#view-name').textContent = p.name;
+  $('#view-note').innerHTML = p.note.split(/\n+/).filter(Boolean).map((l) => `<p>${esc(l)}</p>`).join('');
+  $('#view-note-box').hidden = !p.note;
+  $('#view-photo').hidden = !p.photo;
+  $('#view-photo img').src = p.photo || '';
+  $('#view-photo figcaption').textContent = p.credit ? 'Photo : ' + p.credit : '';
+  $('#view-go').href = dirUrl([p]);
+  $('#view-from-prev').hidden = !prev;
+  if (prev) {
+    $('#view-from-prev').href = dirUrl([prev, p]);
+    $('#view-from-prev small').textContent = `${prev.name} · ${fmtDist(distKm(prev, p))}`;
+  }
+  $('#view-prev').disabled = !prev;
+  $('#view-next').disabled = !next;
+  const dlg = $('#dlg-view');
+  if (!dlg.open) dlg.showModal();
+  dlg.scrollTop = 0;
+  // Centre le point dans la partie de carte visible au-dessus de la fiche.
+  const covered = isWide() ? 0 : dlg.getBoundingClientRect().height;
+  map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 15), offset: [0, -covered / 2], duration: 600 });
+}
+
+function viewStep(delta) {
+  const { day, point } = findPoint(viewing);
+  const q = day.points[day.points.indexOf(point) + delta];
+  if (q) openView(q.id);
+}
+$('#view-prev').addEventListener('click', () => viewStep(-1));
+$('#view-next').addEventListener('click', () => viewStep(1));
+$('#view-edit').addEventListener('click', () => {
+  $('#dlg-view').close();
+  openPointDialog(viewing);
+});
 
 // --- Ajouter un point ---
 function openAddDialog() {
@@ -602,8 +1027,8 @@ function openPointDialog(pid, draft) {
   $('#point-photo').hidden = !p.photo;
   $('#point-photo img').src = p.photo || '';
   $('#point-photo figcaption').textContent = p.credit ? 'Photo : ' + p.credit : '';
-  $('#point-coords').textContent = `📍 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
-  $('#point-goto').href = dirUrl([p], travelMode);
+  $('#point-coords').innerHTML = `${icon('pin', 15)} ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+  $('#point-goto').href = dirUrl([p]);
   $('#point-extra').hidden = !pid;
   $('#point-delete').hidden = !pid;
   $('#dlg-point').showModal();
@@ -691,12 +1116,65 @@ $('#day-delete').addEventListener('click', () => {
   selectDay(null);
 });
 
+// --- Restaurant ---
+let editingRestoId = null;
+function openRestoDialog(id) {
+  const el = $('#resto-form').elements;
+  const r = id && state.restaurants.find((x) => x.id === id);
+  editingRestoId = r ? r.id : null;
+  $('#resto-cities').innerHTML = restoCities().map((c) => `<option value="${esc(c)}">`).join('');
+  el.title.value = r ? r.name : '';
+  el.city.value = r ? r.city : restoCity;
+  el.kind.value = r ? r.kind : 'food';
+  el.note.value = r ? r.note : '';
+  el.place.value = r ? r.query || `${r.lat}, ${r.lng}` : '';
+  el.noFish.checked = r ? r.noFish : false;
+  el.when.value = r ? r.when : '';
+  $('#resto-heading').textContent = r ? 'Modifier le restaurant' : 'Nouveau restaurant';
+  $('#resto-delete').hidden = !r;
+  $('#dlg-resto').showModal();
+}
+
+$('#resto-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const el = e.target.elements;
+  const name = el.title.value.trim();
+  if (!name) return;
+  const place = el.place.value.trim();
+  const coords = parseCoords(place);
+  const r = state.restaurants.find((x) => x.id === editingRestoId);
+  // Même recherche qu'avant : on garde la position déjà connue sur la carte.
+  const kept = !coords && r && hasPlace(r) && r.query === (place || name) ? { lat: r.lat, lng: r.lng, approx: r.approx } : {};
+  const fields = {
+    name, city: el.city.value.trim(), kind: el.kind.value, note: el.note.value.trim(), noFish: el.noFish.checked, when: el.when.value.trim(),
+    ...(coords || { query: place || name, ...kept }),
+  };
+  if (r) {
+    delete r.lat; delete r.lng; delete r.query; delete r.approx;
+    Object.assign(r, fields);
+  } else {
+    state.restaurants.push({ id: uid(), done: false, ...fields });
+  }
+  save();
+  $('#dlg-resto').close();
+  render();
+});
+
+$('#resto-delete').addEventListener('click', () => {
+  const r = state.restaurants.find((x) => x.id === editingRestoId);
+  if (!confirm(`Supprimer « ${r.name} » ?`)) return;
+  state.restaurants.splice(state.restaurants.indexOf(r), 1);
+  save();
+  $('#dlg-resto').close();
+  render();
+});
+
 // --- Menu ---
 $('#btn-menu').addEventListener('click', async () => {
   $('#trip-name').value = state.name;
   fillBasemaps();
   const day = currentDayId && getDay(currentDayId);
-  $('#menu-download').textContent = `⬇️ Télécharger la carte hors-ligne (${day ? `J${dayIndex(day) + 1}` : 'tout le voyage'})`;
+  $('#menu-download').innerHTML = icon('download') + `Télécharger la carte hors-ligne (${day ? `J${dayIndex(day) + 1}` : 'tout le voyage'})`;
   $('#storage-info').textContent = '';
   $('#dlg-menu').showModal();
   if (navigator.storage?.estimate) {
@@ -863,7 +1341,7 @@ $('#menu-download').addEventListener('click', async () => {
     }
   };
   await Promise.all(Array.from({ length: 6 }, worker));
-  const msg = abortDownload ? 'Téléchargement arrêté.' : failed ? `Terminé, ${failed} tuile(s) en échec.` : 'Cartes disponibles hors ligne ✓';
+  const msg = abortDownload ? 'Téléchargement arrêté.' : failed ? `Terminé, ${failed} tuile(s) en échec.` : 'Cartes disponibles hors ligne';
   showBanner(msg, 'OK', hideBanner);
   setTimeout(hideBanner, 5000);
 });
@@ -907,8 +1385,14 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 const baseVersion = +window.DEFAULT_TRIP?.base || 0;
 if (state.base < baseVersion) {
   const empty = state.days.every((d) => d.points.every((p) => p.hotel));
-  if (empty || confirm('Un itinéraire plus complet est disponible (visites, horaires, photos).\nRemplacer votre itinéraire actuel ? Vos modifications seront perdues.')) {
+  if (empty || confirm('Un itinéraire plus complet est disponible (visites, horaires, restaurants).\nRemplacer votre itinéraire actuel ? Vos modifications du programme seront perdues.')) {
+    // Restos : on garde les cases « Testé » (par nom) et les restaurants ajoutés à la main.
+    const old = state.restaurants;
     state = normalize(window.DEFAULT_TRIP);
+    const tested = new Set(old.filter((r) => r.done).map((r) => r.name));
+    state.restaurants.forEach((r) => { r.done = tested.has(r.name); });
+    const names = new Set(state.restaurants.map((r) => r.name));
+    state.restaurants.push(...old.filter((r) => !/^r\d+$/.test(r.id) && !names.has(r.name)));
   }
   state.base = baseVersion; // ne plus redemander
   save();
@@ -917,7 +1401,7 @@ if (state.base < baseVersion) {
 // Photos des lieux : mises en cache dès le lancement pour être visibles hors ligne.
 if ('caches' in window && location.protocol !== 'file:') {
   caches.open(PHOTO_CACHE).then(async (cache) => {
-    const urls = new Set(state.days.flatMap((d) => d.points.map((p) => p.photo)).filter(Boolean));
+    const urls = new Set([...state.days.flatMap((d) => d.points.map((p) => p.photo)), ...state.restaurants.map((r) => r.photo)].filter(Boolean));
     for (const u of urls) {
       const url = new URL(u, location.href).href;
       if (!(await cache.match(url))) await cache.add(url).catch(() => {});
@@ -925,6 +1409,17 @@ if ('caches' in window && location.protocol !== 'file:') {
   });
 }
 
-if (currentDayId && !getDay(currentDayId)) currentDayId = null;
+if (currentDayId && !getDay(currentDayId)) {
+  currentDayId = lastDayId = null;
+  tab = 'overview';
+}
+// Pendant le voyage : ouvrir le jour J au premier lancement de la journée.
+const todayDay = state.days.find((d) => d.date === todayIso());
+if (todayDay && pref('autoDay', '') !== todayIso()) {
+  currentDayId = lastDayId = todayDay.id;
+  tab = 'day';
+  setPref('currentDay', currentDayId);
+  setPref('autoDay', todayIso());
+}
 render();
 fitView(false);
