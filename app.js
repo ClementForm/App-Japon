@@ -925,9 +925,10 @@ function openView(pid) {
   const dlg = $('#dlg-view');
   if (!dlg.open) dlg.showModal();
   dlg.scrollTop = 0;
-  // Centre le point dans la partie de carte visible au-dessus de la fiche.
-  const covered = isWide() ? 0 : dlg.getBoundingClientRect().height;
-  map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 15), offset: [0, -covered / 2], duration: 600 });
+  // Centre le point dans la partie de carte visible : sous les boutons du haut, au-dessus de la fiche.
+  const top = isWide() ? 0 : mapTop();
+  const bottom = isWide() ? window.innerHeight : window.innerHeight - dlg.getBoundingClientRect().height;
+  map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 15), offset: [0, (top + bottom) / 2 - window.innerHeight / 2], duration: 600 });
 }
 
 function viewStep(delta) {

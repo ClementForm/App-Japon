@@ -1,5 +1,5 @@
 // Changer la version pour forcer la mise à jour de l'app sur les téléphones.
-const SHELL_CACHE = 'shell-v30';
+const SHELL_CACHE = 'shell-v31';
 const TILE_CACHE = 'tiles-v1'; // doit correspondre à app.js
 const PHOTO_CACHE = 'photos-v1'; // idem
 const TILE_HOSTS = ['tiles.openfreemap.org', 'server.arcgisonline.com', 'a.tile.openstreetmap.fr']; // fonds de carte de app.js

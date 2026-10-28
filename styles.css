@@ -430,6 +430,9 @@ dialog.view-dlg::backdrop { background: rgba(0, 0, 0, .12); }
     padding-bottom: var(--bottom);
   }
   dialog[open] { animation: sheet-up .32s var(--ease); }
+  /* Fiche d'un point : laisse la moitié haute de la carte visible, le reste défile */
+  dialog.view-dlg { max-height: 56%; }
+  .view-dlg .hero img { height: 170px; }
   dialog[open]::backdrop { animation: fade-in .32s; }
 }
 @keyframes sheet-up { from { transform: translateY(100%); } }
