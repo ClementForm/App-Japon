@@ -333,6 +333,7 @@ function pointLabels(points) {
 }
 
 let markers = [];
+let popup = null; // bulle du point touché sur la carte
 function renderMap() {
   markers.forEach((m) => m.remove());
   markers = [];
@@ -367,9 +368,9 @@ function renderMap() {
       el.addEventListener('click', (e) => {
         if (pending) return; // laisse la carte recevoir le clic
         e.stopPropagation();
-        // Depuis n'importe quel onglet : on bascule sur le jour du point et on ouvre sa fiche (avec photo).
+        // Depuis n'importe quel onglet : on bascule sur le jour du point et on ouvre sa bulle.
         if (tab !== 'day' || currentDayId !== day.id) selectDay(day.id);
-        openView(p.id);
+        openPopup(p.id);
       });
       markers.push(new maplibregl.Marker({ element: el, opacity: active ? '1' : '0.12' }).setLngLat([p.lng, p.lat]).addTo(map));
     });
@@ -702,6 +703,7 @@ function dayHtml(day) {
 
 // Sans jour : onglet « Aperçu » (ou celui demandé), carte de tout le voyage.
 function selectDay(id, toTab) {
+  popup?.remove();
   if ((id || null) !== currentDayId) reordering = false;
   currentDayId = id || null;
   if (currentDayId) lastDayId = currentDayId;
@@ -929,6 +931,41 @@ function openView(pid) {
   const top = isWide() ? 0 : mapTop();
   const bottom = isWide() ? window.innerHeight : window.innerHeight - dlg.getBoundingClientRect().height;
   map.easeTo({ center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 15), offset: [0, (top + bottom) / 2 - window.innerHeight / 2], duration: 600 });
+}
+
+// --- Bulle d'un point, accrochée à son marqueur ---
+function openPopup(pid) {
+  const f = findPoint(pid);
+  if (!f) return;
+  const { day, point: p } = f;
+  const i = day.points.indexOf(p);
+  const meta = [p.time && p.time.replace(':', ' h '), `J${dayIndex(day) + 1}`, fmtDate(day.date)].filter(Boolean).join(' · ');
+  const el = document.createElement('div');
+  el.className = 'pop';
+  el.innerHTML = `${p.photo ? `<img src="${esc(p.photo)}" alt="">` : ''}
+    <div class="pop-body">
+      <div class="pop-meta"><span class="badge" style="background:${esc(day.color)}">${pointLabels(day.points)[i]}</span>${esc(meta)}</div>
+      <h3>${esc(p.name)}</h3>
+      <div class="pop-actions">
+        <a class="btn primary" href="${esc(dirUrl([p]))}" target="_blank" rel="noopener">${icon('go', 16)}Y aller</a>
+        <button type="button" class="btn">Détails</button>
+      </div>
+    </div>`;
+  el.querySelector('button').addEventListener('click', () => { popup.remove(); openView(pid); });
+  popup?.remove();
+  popup = new maplibregl.Popup({ anchor: 'bottom', offset: 24, closeButton: false, maxWidth: 'none', className: 'point-pop' })
+    .setLngLat([p.lng, p.lat]).setDOMContent(el).addTo(map);
+  if (!isWide() && snap === 'full') setSnap('half');
+  // Bulle + point au milieu de la carte visible (entre les boutons du haut et le panneau).
+  const h = el.offsetHeight + 24;
+  const left = isWide() ? $('#sheet').getBoundingClientRect().right : 0;
+  const top = isWide() ? 0 : mapTop();
+  const bottom = window.innerHeight - (isWide() ? 0 : snapHeights()[snap]);
+  const y = Math.max(top + h + 8, (top + bottom + h) / 2);
+  map.easeTo({
+    center: [p.lng, p.lat], zoom: Math.max(map.getZoom(), 15), duration: 600,
+    offset: [(left + window.innerWidth) / 2 - window.innerWidth / 2, y - window.innerHeight / 2],
+  });
 }
 
 function viewStep(delta) {
